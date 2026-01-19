@@ -1,0 +1,256 @@
+CREATE DATABASE ProductionManagement;
+GO
+
+USE ProductionManagement;
+GO
+
+CREATE TABLE Units (
+    UnitID INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(20) NOT NULL
+);
+
+CREATE TABLE Materials (
+    MaterialID INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    UnitID INT NOT NULL,
+    MinStock DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE Products (
+    ProductID INT IDENTITY PRIMARY KEY,
+    Article NVARCHAR(20) NOT NULL UNIQUE,
+    Name NVARCHAR(30) NOT NULL,
+    Description NVARCHAR(255)
+);
+
+CREATE TABLE BillOfMaterials (
+    BOMID INT IDENTITY PRIMARY KEY,
+    ProductID INT NOT NULL,
+    MaterialID INT NOT NULL,
+    Quantity DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE Suppliers (
+    SupplierID INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Phone NVARCHAR(20) NOT NULL,
+    Email NVARCHAR(100)
+);
+
+CREATE TABLE Purchase (
+    PurchaseID INT IDENTITY PRIMARY KEY,
+    SupplierID INT NOT NULL,
+    MaterialID INT NOT NULL,
+    PurchaseDate DATE NOT NULL,
+    Quantity DECIMAL(10,2) NOT NULL,
+    Price DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE MaterialStocks (
+    StockID INT IDENTITY PRIMARY KEY,
+    MaterialID INT NOT NULL,
+    Quantity DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE StatusesOfOrder (
+    StatusID INT IDENTITY PRIMARY KEY,
+    Name VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE Clients (
+    ClientID INT IDENTITY PRIMARY KEY,
+    Name VARCHAR(30) NOT NULL,
+	PhoneNumber VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE ProductionOrder (
+    OrderID INT IDENTITY PRIMARY KEY,
+    ClientID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL,
+    StartDate DATE NOT NULL,
+    EndDate DATE,
+    StatusID INT NOT NULL
+);
+
+CREATE TABLE Departament (
+    DepartamentID INT IDENTITY PRIMARY KEY,
+    Name VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Positions (
+    PositionID INT IDENTITY PRIMARY KEY,
+    Name VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Employees (
+    EmployeeID INT IDENTITY PRIMARY KEY,
+    Surname NVARCHAR(20) NOT NULL,
+	Name NVARCHAR(20) NOT NULL,
+	MiddleName NVARCHAR(20),
+    PositionID INT NOT NULL,
+    DepartmentID INT NOT NULL,
+    Salary DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE StatusesOfEquipment (
+    StatusID INT IDENTITY PRIMARY KEY,
+    Name VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE Equipments (
+    EquipmentID INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(40) NOT NULL,
+    InventoryNumber NVARCHAR(20) NOT NULL,
+    StatusID INT NOT NULL
+);
+
+
+CREATE TABLE OrderAssignments (
+    AssignmentID INT IDENTITY PRIMARY KEY,
+    OrderID INT NOT NULL,
+    EmployeeID INT NULL,
+    EquipmentID INT NULL
+);
+
+
+ALTER TABLE Materials
+ADD CONSTRAINT FK_Materials_Units
+FOREIGN KEY (UnitID) REFERENCES Units(UnitID);
+
+ALTER TABLE BillOfMaterials
+ADD CONSTRAINT FK_BOM_Product
+FOREIGN KEY (ProductID) REFERENCES Products(ProductID);
+
+ALTER TABLE BillOfMaterials
+ADD CONSTRAINT FK_BOM_Material
+FOREIGN KEY (MaterialID) REFERENCES Materials(MaterialID);
+
+ALTER TABLE Purchase
+ADD CONSTRAINT FK_Purchase_Supplier
+FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID);
+
+ALTER TABLE Purchase
+ADD CONSTRAINT FK_Purchase_Material
+FOREIGN KEY (MaterialID) REFERENCES Materials(MaterialID);
+
+ALTER TABLE MaterialStocks
+ADD CONSTRAINT FK_MaterialStocks_Material
+FOREIGN KEY (MaterialID) REFERENCES Materials(MaterialID);
+
+ALTER TABLE ProductionOrder
+ADD CONSTRAINT FK_ProductionOrder_Client
+FOREIGN KEY (ClientID) REFERENCES Clients(ClientID);
+
+ALTER TABLE ProductionOrder
+ADD CONSTRAINT FK_ProductionOrder_Product
+FOREIGN KEY (ProductID) REFERENCES Products(ProductID);
+
+ALTER TABLE ProductionOrder
+ADD CONSTRAINT FK_ProductionOrder_Status
+FOREIGN KEY (StatusID) REFERENCES StatusesOfOrder(StatusID);
+
+ALTER TABLE Employees
+ADD CONSTRAINT FK_Employees_Position
+FOREIGN KEY (PositionID) REFERENCES Positions(PositionID);
+
+ALTER TABLE Employees
+ADD CONSTRAINT FK_Employees_Department
+FOREIGN KEY (DepartmentID) REFERENCES Departament(DepartamentID);
+
+ALTER TABLE Equipments
+ADD CONSTRAINT FK_Equipments_Status
+FOREIGN KEY (StatusID) REFERENCES StatusesOfEquipment(StatusID);
+
+ALTER TABLE OrderAssignments
+ADD CONSTRAINT FK_OrderAssignments_Order
+FOREIGN KEY (OrderID) REFERENCES ProductionOrder(OrderID);
+
+ALTER TABLE OrderAssignments
+ADD CONSTRAINT FK_OrderAssignments_Employee
+FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID);
+
+ALTER TABLE OrderAssignments
+ADD CONSTRAINT FK_OrderAssignments_Equipment
+FOREIGN KEY (EquipmentID) REFERENCES Equipments(EquipmentID);
+
+
+INSERT INTO Units(Name) VALUES
+('кг'),
+('л');
+
+INSERT INTO Materials(Name, UnitID, MinStock) VALUES
+('Металл', 1, 100),
+('Пластик', 1, 50),
+('Краска', 2, 20);
+
+INSERT INTO Products (Article, Name, Description) VALUES
+('PR-1001', 'Металлический шкаф', 'Шкаф для хранения документов'),
+('PR-1002', 'Пластиковый ящик', 'Ящик для хранения');
+
+
+INSERT INTO BillOfMaterials (ProductID, MaterialID, Quantity) VALUES
+(1, 1, 15),
+(1, 3, 2),
+(2, 2, 5);
+
+
+INSERT INTO Suppliers (Name, Phone, Email) VALUES
+('ООО МеталлСнаб', '79137205626', 'metal@sup.ru'),
+('ООО ПластПром', '79136487211', 'plastic@sup.ru');
+
+INSERT INTO Purchase (SupplierID, MaterialID, PurchaseDate, Quantity, Price) VALUES
+(1, 1, '2026-01-10', 500, 120),
+(2, 2, '2026-01-12', 300, 90);
+
+
+INSERT INTO MaterialStocks (MaterialID, Quantity) VALUES
+(1, 400),
+(2, 250),
+(3, 50);
+
+INSERT INTO Departament(Name) VALUES
+('Производство'),
+('Бухгалтерия');
+
+INSERT INTO Positions(Name) VALUES
+('Оператор'),
+('Мастер');
+
+INSERT INTO Employees (Surname, Name, MiddleName, PositionID, DepartmentID, Salary) VALUES
+('Мащенко','Евгений','Викторович', 1, 1, 50000),
+('Турышев','Евгений','Владимирович', 2, 1, 65000);
+
+INSERT INTO StatusesOfEquipment(Name) VALUES
+('В работе'),
+('Свободно'),
+('В ремонте');
+
+INSERT INTO StatusesOfOrder(Name) VALUES
+('В работе'),
+('Выполнен'),
+('Отменён'),
+('В ожидании');
+
+INSERT INTO Clients(Name, PhoneNumber) VALUES
+('ООО Марсель', '72842783728'),
+('ООО Монако', '79147285910'),
+('АО ПСЖ', '79147285738');
+
+INSERT INTO Equipments (Name, InventoryNumber, StatusID) VALUES
+('Пресс-станок', 'EQ-001', 1),
+('Покрасочная камера', 'EQ-002', 2);
+
+
+INSERT INTO ProductionOrder
+(ClientID, ProductID, Quantity, StartDate, EndDate, StatusID)
+VALUES
+(1, 1, 23, '2026-02-01', '2026-02-15', 2),
+(2, 1, 2, '2026-02-10', '2026-02-25', 1),
+(3, 1, 15, '2026-02-16', '2026-02-28', 4);
+
+
+INSERT INTO OrderAssignments (OrderID, EmployeeID, EquipmentID) VALUES
+(1, 1, NULL),
+(1, NULL, 1);
+
